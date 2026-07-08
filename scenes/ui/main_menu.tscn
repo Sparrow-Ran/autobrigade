@@ -32,6 +32,11 @@ theme_override_font_sizes/font_size = 36
 text = "АВТОБРИГАДА"
 horizontal_alignment = 1
 
+[node name="NickEdit" type="LineEdit" parent="VBox"]
+layout_mode = 2
+max_length = 16
+placeholder_text = "Никнейм"
+
 [node name="HostButton" type="Button" parent="VBox"]
 layout_mode = 2
 text = "Создать игру"

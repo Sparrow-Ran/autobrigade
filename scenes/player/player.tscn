@@ -32,6 +32,9 @@ properties/4/replication_mode = 1
 properties/5/path = NodePath(".:van_local_yaw")
 properties/5/spawn = true
 properties/5/replication_mode = 1
+properties/6/path = NodePath(".:nickname")
+properties/6/spawn = true
+properties/6/replication_mode = 0
 
 [node name="Player" type="CharacterBody3D" unique_id=1641595711]
 collision_layer = 2

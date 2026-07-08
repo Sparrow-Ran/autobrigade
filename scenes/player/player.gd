@@ -29,8 +29,10 @@ const OWN_BODY_RENDER_LAYER := 1 << 1
 
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var current_seat: Seat = null
-## Set by Net at spawn (synced): picks the capsule color and display name.
+## Set by Net at spawn (synced): picks the capsule color and fallback name.
 var color_index: int = 0
+## Set by Net at spawn (synced): the name chosen in the main menu; may be empty.
+var nickname: String = ""
 
 ## Synced while riding the van bed on foot: every peer reconstructs the pose
 ## from its own local van transform, so passengers never lag off the bed.
@@ -80,6 +82,8 @@ func _ready() -> void:
 
 
 func get_display_name() -> String:
+	if not nickname.is_empty():
+		return nickname
 	return "Игрок %d" % (color_index + 1)
 
 

@@ -13,6 +13,9 @@ const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
 var mode: Mode = Mode.OFFLINE
 ## The player node owned by this peer; set by the player itself in _ready.
 var local_player: Node = null
+## Set from the main menu before host/join. Later this is where the Steam
+## persona name will plug in instead.
+var local_nickname: String = ""
 
 var _level_loaded := false
 var _connected := false
@@ -75,7 +78,7 @@ func level_ready() -> void:
 	_level_loaded = true
 	match mode:
 		Mode.HOST, Mode.OFFLINE:
-			_spawn_player(multiplayer.get_unique_id())
+			_spawn_player(multiplayer.get_unique_id(), local_nickname)
 		Mode.CLIENT:
 			_try_register()
 
@@ -83,17 +86,17 @@ func level_ready() -> void:
 func _try_register() -> void:
 	if _level_loaded and _connected and not _registered:
 		_registered = true
-		_register_player.rpc_id(1)
+		_register_player.rpc_id(1, local_nickname)
 
 
 @rpc("any_peer", "reliable")
-func _register_player() -> void:
+func _register_player(nickname: String) -> void:
 	if not multiplayer.is_server():
 		return
-	_spawn_player(multiplayer.get_remote_sender_id())
+	_spawn_player(multiplayer.get_remote_sender_id(), nickname)
 
 
-func _spawn_player(peer_id: int) -> void:
+func _spawn_player(peer_id: int, nickname: String) -> void:
 	var container := _players_container()
 	if container == null or container.has_node(str(peer_id)):
 		return
@@ -101,9 +104,10 @@ func _spawn_player(peer_id: int) -> void:
 	player.name = str(peer_id)
 	player.position = Vector3(2.0 * _spawn_index, 1.2, 4.0)
 	player.color_index = _spawn_index
+	player.nickname = nickname.strip_edges().substr(0, 16)
 	_spawn_index += 1
 	container.add_child(player, true)
-	print("[Net] spawned player for peer %d" % peer_id)
+	print("[Net] spawned player for peer %d (%s)" % [peer_id, player.nickname])
 
 
 func _players_container() -> Node:
