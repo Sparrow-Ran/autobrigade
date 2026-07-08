@@ -60,12 +60,12 @@ collision_mask = 5
 [node name="Camera3D" type="Camera3D" parent="CameraPivot" unique_id=493004021]
 transform = Transform3D(1, 0, -1.748456e-07, 0, 1, 0, 1.748456e-07, 0, 1, 0, 0, 0)
 
-[node name="NameLabel" type="Label3D" parent="."]
+[node name="NameLabel" type="Label3D" parent="." unique_id=1349134485]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
 pixel_size = 0.004
 billboard = 1
 text = "Игрок"
 font_size = 28
 
-[node name="Sync" type="MultiplayerSynchronizer" parent="."]
+[node name="Sync" type="MultiplayerSynchronizer" parent="." unique_id=1943374211]
 replication_config = SubResource("SceneReplicationConfig_1")

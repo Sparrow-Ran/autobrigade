@@ -80,7 +80,13 @@ debug_panel={
 [physics]
 
 3d/physics_engine="Jolt Physics"
+common/physics_interpolation=true
+common/physics_jitter_fix=0.0
 
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+environment/ssao/half_size=false
+environment/ssil/half_size=false
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/screen_space_roughness_limiter/enabled=false

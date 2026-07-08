@@ -88,6 +88,8 @@ func request_flip_upright() -> void:
 	# Keep the heading, drop roll and pitch, lift a bit so wheels settle cleanly.
 	rotation = Vector3(0.0, rotation.y, 0.0)
 	position.y += 1.5
+	# Teleport: don't let physics interpolation smear it across the screen.
+	reset_physics_interpolation()
 
 
 @rpc("any_peer", "call_local", "reliable")

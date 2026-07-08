@@ -266,6 +266,7 @@ func seat_locally(seat: Seat) -> void:
 	_van_frame_velocity = Vector3.ZERO
 	on_van = false
 	global_transform = seat.sit_point.global_transform
+	reset_physics_interpolation()
 
 
 ## Called by the seat on EVERY peer when synced occupancy says this player stood up.
@@ -273,6 +274,7 @@ func unseat_locally(exit_transform: Transform3D) -> void:
 	current_seat = null
 	_kb_brake_held = false
 	global_transform = exit_transform
+	reset_physics_interpolation()
 	if is_multiplayer_authority():
 		player_camera.current = true
 
