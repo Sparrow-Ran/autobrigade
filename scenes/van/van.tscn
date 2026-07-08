@@ -11,18 +11,6 @@ properties/0/replication_mode = 1
 properties/1/path = NodePath(".:rotation")
 properties/1/spawn = true
 properties/1/replication_mode = 1
-properties/2/path = NodePath("WheelFL:rotation")
-properties/2/spawn = true
-properties/2/replication_mode = 1
-properties/3/path = NodePath("WheelFR:rotation")
-properties/3/spawn = true
-properties/3/replication_mode = 1
-properties/4/path = NodePath("WheelRL:rotation")
-properties/4/spawn = true
-properties/4/replication_mode = 1
-properties/5/path = NodePath("WheelRR:rotation")
-properties/5/spawn = true
-properties/5/replication_mode = 1
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(3.2, 0.2, 4.6)
@@ -64,11 +52,6 @@ suspension_stiffness = 50.0
 suspension_travel = 0.3
 suspension_max_force = 10000.0
 
-[node name="WheelFLMesh" type="MeshInstance3D" parent="WheelFL"]
-transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
-mesh = SubResource("CylinderMesh_wheel")
-surface_material_override/0 = SubResource("StandardMaterial3D_wheel")
-
 [node name="WheelFR" type="VehicleWheel3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.15, -1.7)
 use_as_steering = true
@@ -78,11 +61,6 @@ wheel_friction_slip = 2.5
 suspension_stiffness = 50.0
 suspension_travel = 0.3
 suspension_max_force = 10000.0
-
-[node name="WheelFRMesh" type="MeshInstance3D" parent="WheelFR"]
-transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
-mesh = SubResource("CylinderMesh_wheel")
-surface_material_override/0 = SubResource("StandardMaterial3D_wheel")
 
 [node name="WheelRL" type="VehicleWheel3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 0.15, 1.7)
@@ -94,11 +72,6 @@ suspension_stiffness = 50.0
 suspension_travel = 0.3
 suspension_max_force = 10000.0
 
-[node name="WheelRLMesh" type="MeshInstance3D" parent="WheelRL"]
-transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
-mesh = SubResource("CylinderMesh_wheel")
-surface_material_override/0 = SubResource("StandardMaterial3D_wheel")
-
 [node name="WheelRR" type="VehicleWheel3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 0.15, 1.7)
 use_as_traction = true
@@ -109,7 +82,42 @@ suspension_stiffness = 50.0
 suspension_travel = 0.3
 suspension_max_force = 10000.0
 
-[node name="WheelRRMesh" type="MeshInstance3D" parent="WheelRR"]
+[node name="WheelFLVisual" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, -0.1, -1.7)
+
+[node name="Spinner" type="Node3D" parent="WheelFLVisual"]
+
+[node name="Mesh" type="MeshInstance3D" parent="WheelFLVisual/Spinner"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_wheel")
+surface_material_override/0 = SubResource("StandardMaterial3D_wheel")
+
+[node name="WheelFRVisual" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, -0.1, -1.7)
+
+[node name="Spinner" type="Node3D" parent="WheelFRVisual"]
+
+[node name="Mesh" type="MeshInstance3D" parent="WheelFRVisual/Spinner"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_wheel")
+surface_material_override/0 = SubResource("StandardMaterial3D_wheel")
+
+[node name="WheelRLVisual" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, -0.1, 1.7)
+
+[node name="Spinner" type="Node3D" parent="WheelRLVisual"]
+
+[node name="Mesh" type="MeshInstance3D" parent="WheelRLVisual/Spinner"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_wheel")
+surface_material_override/0 = SubResource("StandardMaterial3D_wheel")
+
+[node name="WheelRRVisual" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, -0.1, 1.7)
+
+[node name="Spinner" type="Node3D" parent="WheelRRVisual"]
+
+[node name="Mesh" type="MeshInstance3D" parent="WheelRRVisual/Spinner"]
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("CylinderMesh_wheel")
 surface_material_override/0 = SubResource("StandardMaterial3D_wheel")

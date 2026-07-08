@@ -79,6 +79,9 @@ func _ready() -> void:
 		add_child(hud)
 	else:
 		player_camera.current = false
+		# Remote players are positioned by the synchronizer between physics ticks;
+		# physics interpolation would render them stuck at stale snapshots.
+		physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 
 
 func get_display_name() -> String:
@@ -265,6 +268,8 @@ func seat_locally(seat: Seat) -> void:
 	_carry_van = null
 	_van_frame_velocity = Vector3.ZERO
 	on_van = false
+	# While glued per-frame in _process, own interpolation must not second-guess it.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	global_transform = seat.sit_point.global_transform
 	reset_physics_interpolation()
 
@@ -276,6 +281,8 @@ func unseat_locally(exit_transform: Transform3D) -> void:
 	global_transform = exit_transform
 	reset_physics_interpolation()
 	if is_multiplayer_authority():
+		# Back to normal physics-driven motion; remote players stay opted out.
+		physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_INHERIT
 		player_camera.current = true
 
 
@@ -283,14 +290,17 @@ func _process(_delta: float) -> void:
 	# Network poll applies incoming sync at the start of the frame, before _process.
 	# Re-gluing here guarantees the locally derived pose always wins over the
 	# (laggy) synced world transform — on every peer, every frame.
+	# INTERPOLATED van pose, not the physics one: the van renders interpolated,
+	# and gluing to its physics pose makes passengers wobble against the body.
 	if current_seat != null:
-		global_transform = current_seat.sit_point.global_transform
+		global_transform = current_seat.sit_point.get_global_transform_interpolated()
 	elif on_van and not is_multiplayer_authority():
 		# Remote passenger on the van bed: rebuild the pose from OUR local van.
 		var van: Node3D = get_tree().get_first_node_in_group("van")
 		if van != null:
-			global_position = van.global_transform * van_local_pos
-			rotation.y = van.rotation.y + van_local_yaw
+			var van_xf := van.get_global_transform_interpolated()
+			global_position = van_xf * van_local_pos
+			rotation.y = van_xf.basis.get_euler().y + van_local_yaw
 
 
 ## Text for the HUD prompt under the crosshair.

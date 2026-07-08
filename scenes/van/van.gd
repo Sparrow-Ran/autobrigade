@@ -23,11 +23,19 @@ extends VehicleBody3D
 @onready var seat_brake: Seat = $SeatBrake
 @onready var seat_steer_left: Seat = $SeatSteerLeft
 @onready var seat_steer_right: Seat = $SeatSteerRight
+## Visual wheel radius, matches the physics wheels; used for spin speed.
+const WHEEL_VISUAL_RADIUS := 0.4
+
 @onready var reverse_switch: ToggleSwitch = $SeatBrake/ReverseSwitch
 @onready var horn_player: AudioStreamPlayer3D = $HornPlayer
 @onready var engine_player: AudioStreamPlayer3D = $EnginePlayer
+# First two are the steering (front) pair.
+@onready var wheel_visuals: Array[Node3D] = [
+	$WheelFLVisual, $WheelFRVisual, $WheelRLVisual, $WheelRRVisual
+]
 
-var _prev_sound_pos := Vector3.ZERO
+var _prev_frame_pos := Vector3.ZERO
+var _wheel_spin: float = 0.0
 
 
 func _ready() -> void:
@@ -35,7 +43,7 @@ func _ready() -> void:
 	horn_player.stream = _make_horn_stream()
 	engine_player.stream = _make_engine_stream()
 	engine_player.play()
-	_prev_sound_pos = global_position
+	_prev_frame_pos = global_position
 	# Van physics runs only on the host; clients receive the synced transform.
 	if not multiplayer.is_server():
 		freeze = true
@@ -43,12 +51,18 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	# Engine sound runs locally on every peer: gas value is synced, and speed is
-	# derived from position so it works on clients (frozen body, zero velocity).
-	var speed_kmh := clampf(
-		(global_position - _prev_sound_pos).length() / maxf(delta, 0.0001) * 3.6, 0.0, 150.0
-	)
-	_prev_sound_pos = global_position
+	# Sound and wheel visuals run locally on every peer from the same data:
+	# synced lever values + motion derived from position (works on clients,
+	# where the frozen body has zero physics velocity).
+	var displacement := global_position - _prev_frame_pos
+	_prev_frame_pos = global_position
+	var safe_delta := maxf(delta, 0.0001)
+	var speed_kmh := clampf(displacement.length() / safe_delta * 3.6, 0.0, 150.0)
+	_update_engine_sound(speed_kmh, delta)
+	_update_wheel_visuals(displacement, safe_delta, speed_kmh)
+
+
+func _update_engine_sound(speed_kmh: float, delta: float) -> void:
 	var gas := seat_gas.lever.value
 	var target_pitch := (
 		engine_idle_pitch + gas * engine_pitch_per_throttle + speed_kmh * engine_pitch_per_kmh
@@ -56,6 +70,21 @@ func _process(delta: float) -> void:
 	var smoothing := 1.0 - exp(-6.0 * delta)
 	engine_player.pitch_scale = lerpf(engine_player.pitch_scale, target_pitch, smoothing)
 	engine_player.volume_db = lerpf(-35.0, -25.0, clampf(gas + speed_kmh / 100.0, 0.0, 1.0))
+
+
+## Wheels are pure visuals driven by slot data, not synced physics nodes:
+## every peer computes identical spin/steer, and the frozen client vehicle
+## can't overwrite them with garbage suspension state.
+func _update_wheel_visuals(displacement: Vector3, delta: float, speed_kmh: float) -> void:
+	var forward_speed := displacement.dot(-global_transform.basis.z) / delta
+	_wheel_spin = wrapf(_wheel_spin + forward_speed / WHEEL_VISUAL_RADIUS * delta, -TAU, TAU)
+	var steer_scale := steer_falloff_kmh / (steer_falloff_kmh + speed_kmh)
+	var steer := (
+		(seat_steer_left.lever.value - seat_steer_right.lever.value) * max_steer_rad * steer_scale
+	)
+	for i in wheel_visuals.size():
+		wheel_visuals[i].rotation.y = steer if i < 2 else 0.0
+		(wheel_visuals[i].get_node("Spinner") as Node3D).rotation.x = -_wheel_spin
 
 
 func _physics_process(_delta: float) -> void:
