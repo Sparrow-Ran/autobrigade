@@ -64,6 +64,12 @@ func join(ip: String) -> Error:
 	return OK
 
 
+## Leave the session: the host takes the lobby down (clients get kicked back
+## to the menu via server_disconnected), a client just disconnects itself.
+func leave() -> void:
+	_reset_to_menu()
+
+
 ## Called by the level's _ready on every peer once the scene exists.
 func level_ready() -> void:
 	_level_loaded = true

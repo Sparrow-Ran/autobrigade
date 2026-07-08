@@ -49,6 +49,18 @@ func _physics_process(_delta: float) -> void:
 	)
 
 
+## Rescue button: any player may ask the host to put the van back on its wheels.
+@rpc("any_peer", "call_local", "reliable")
+func request_flip_upright() -> void:
+	if not multiplayer.is_server():
+		return
+	linear_velocity = Vector3.ZERO
+	angular_velocity = Vector3.ZERO
+	# Keep the heading, drop roll and pitch, lift a bit so wheels settle cleanly.
+	rotation = Vector3(0.0, rotation.y, 0.0)
+	position.y += 1.5
+
+
 @rpc("any_peer", "call_local", "reliable")
 func request_horn() -> void:
 	if multiplayer.is_server():

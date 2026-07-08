@@ -8,11 +8,38 @@ var _last_van_pos := Vector3.ZERO
 
 @onready var prompt_label: Label = $Prompt
 @onready var debug_label: Label = $DebugPanel
+@onready var pause_menu: Panel = $PauseMenu
+
+
+func _ready() -> void:
+	$PauseMenu/VBox/ContinueButton.pressed.connect(_toggle_pause_menu)
+	$PauseMenu/VBox/FlipVanButton.pressed.connect(_on_flip_van_pressed)
+	$PauseMenu/VBox/ExitButton.pressed.connect(_on_exit_pressed)
 
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("debug_panel"):
 		debug_label.visible = not debug_label.visible
+	if event.is_action_pressed("ui_cancel"):
+		_toggle_pause_menu()
+
+
+func _toggle_pause_menu() -> void:
+	pause_menu.visible = not pause_menu.visible
+	Input.mouse_mode = (
+		Input.MOUSE_MODE_VISIBLE if pause_menu.visible else Input.MOUSE_MODE_CAPTURED
+	)
+
+
+func _on_flip_van_pressed() -> void:
+	var van: Node = get_tree().get_first_node_in_group("van")
+	if van != null:
+		van.request_flip_upright.rpc_id(1)
+	_toggle_pause_menu()
+
+
+func _on_exit_pressed() -> void:
+	Net.leave()
 
 
 func _process(delta: float) -> void:

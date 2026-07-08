@@ -111,13 +111,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		if switch_van != null:
 			switch_van.reverse_switch.request_toggle.rpc_id(1)
 
-	if event.is_action_pressed("ui_cancel"):
-		Input.mouse_mode = (
-			Input.MOUSE_MODE_VISIBLE
-			if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
-			else Input.MOUSE_MODE_CAPTURED
-		)
-
 	if event.is_action_pressed("interact"):
 		if current_seat != null:
 			current_seat.request_stand.rpc_id(1)
