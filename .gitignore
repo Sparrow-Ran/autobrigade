@@ -4,3 +4,7 @@
 
 # Local Claude Code settings
 .claude/settings.local.json
+
+# Build artifacts
+*.pck
+*.exe
