@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://scenes/levels/test_level.gd" id="1"]
 [ext_resource type="Script" path="res://scenes/levels/interactable_test.gd" id="2"]
@@ -28,6 +28,36 @@ size = Vector3(1, 1, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_box"]
 size = Vector3(1, 1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ramp"]
+size = Vector3(6, 0.4, 12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ramp"]
+size = Vector3(6, 0.4, 12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ramp"]
+albedo_color = Color(0.75, 0.6, 0.3, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_garage_side"]
+size = Vector3(0.2, 3, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_garage_side"]
+size = Vector3(0.2, 3, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_garage_back"]
+size = Vector3(5.6, 3, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_garage_back"]
+size = Vector3(5.6, 3, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_garage_roof"]
+size = Vector3(5.6, 0.2, 6.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_garage_roof"]
+size = Vector3(5.6, 0.2, 6.4)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_garage"]
+albedo_color = Color(0.55, 0.58, 0.65, 1)
 
 [node name="TestLevel" type="Node3D"]
 script = ExtResource("1")
@@ -94,6 +124,60 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -26)
 
 [node name="Cone10" parent="Cones" instance=ExtResource("4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, -26)
+
+[node name="Ramp" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.966, -0.259, 0, 0.259, 0.966, -5, 1.36, -75)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ramp"]
+shape = SubResource("BoxShape3D_ramp")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ramp"]
+mesh = SubResource("BoxMesh_ramp")
+surface_material_override/0 = SubResource("StandardMaterial3D_ramp")
+
+[node name="Garage" type="StaticBody3D" parent="."]
+
+[node name="WallLeftCol" type="CollisionShape3D" parent="Garage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.3, 1.5, -25)
+shape = SubResource("BoxShape3D_garage_side")
+
+[node name="WallLeftMesh" type="MeshInstance3D" parent="Garage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.3, 1.5, -25)
+mesh = SubResource("BoxMesh_garage_side")
+surface_material_override/0 = SubResource("StandardMaterial3D_garage")
+
+[node name="WallRightCol" type="CollisionShape3D" parent="Garage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.7, 1.5, -25)
+shape = SubResource("BoxShape3D_garage_side")
+
+[node name="WallRightMesh" type="MeshInstance3D" parent="Garage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.7, 1.5, -25)
+mesh = SubResource("BoxMesh_garage_side")
+surface_material_override/0 = SubResource("StandardMaterial3D_garage")
+
+[node name="WallBackCol" type="CollisionShape3D" parent="Garage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 1.5, -28.1)
+shape = SubResource("BoxShape3D_garage_back")
+
+[node name="WallBackMesh" type="MeshInstance3D" parent="Garage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 1.5, -28.1)
+mesh = SubResource("BoxMesh_garage_back")
+surface_material_override/0 = SubResource("StandardMaterial3D_garage")
+
+[node name="RoofCol" type="CollisionShape3D" parent="Garage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 3.1, -25.1)
+shape = SubResource("BoxShape3D_garage_roof")
+
+[node name="RoofMesh" type="MeshInstance3D" parent="Garage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 3.1, -25.1)
+mesh = SubResource("BoxMesh_garage_roof")
+surface_material_override/0 = SubResource("StandardMaterial3D_garage")
+
+[node name="GarageLabel" type="Label3D" parent="Garage"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25, 3.7, -21.8)
+pixel_size = 0.01
+text = "ГАРАЖ"
+font_size = 48
 
 [node name="Players" type="Node3D" parent="."]
 
