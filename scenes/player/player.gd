@@ -13,6 +13,8 @@ const OWN_BODY_RENDER_LAYER := 1 << 1
 
 @export var move_speed: float = 5.0
 @export var jump_velocity: float = 4.5
+## Horizontal acceleration while airborne (weak drift control, preserves momentum).
+@export var air_acceleration: float = 10.0
 @export var mouse_sensitivity: float = 0.003
 @export var pitch_min_deg: float = -60.0
 @export var pitch_max_deg: float = 70.0
@@ -29,7 +31,17 @@ var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var current_seat: Seat = null
 ## Set by Net at spawn (synced): picks the capsule color and display name.
 var color_index: int = 0
+
+## Synced while riding the van bed on foot: every peer reconstructs the pose
+## from its own local van transform, so passengers never lag off the bed.
+var on_van: bool = false
+var van_local_pos := Vector3.ZERO
+var van_local_yaw: float = 0.0
+
 var _kb_brake_held: bool = false
+var _carry_van: Van = null
+var _last_van_xf := Transform3D()
+var _van_frame_velocity := Vector3.ZERO
 
 
 func _enter_tree() -> void:
@@ -40,6 +52,10 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	add_to_group("players")
+	# We carry riders ourselves from the van's transform delta (works on clients
+	# where the van is frozen); disable the built-in platform velocity so the
+	# two mechanisms never double-apply on the host.
+	platform_floor_layers = 0
 	_apply_color()
 	name_label.text = get_display_name()
 	# Late join: if this player was already seated when we learned about them,
@@ -131,6 +147,8 @@ func _physics_process(delta: float) -> void:
 	if not is_multiplayer_authority():
 		return
 
+	_apply_van_carry(delta)
+
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 
@@ -140,14 +158,72 @@ func _physics_process(delta: float) -> void:
 	var input_dir := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 
-	if direction:
-		velocity.x = direction.x * move_speed
-		velocity.z = direction.z * move_speed
+	if is_on_floor():
+		if direction:
+			velocity.x = direction.x * move_speed
+			velocity.z = direction.z * move_speed
+		else:
+			velocity.x = move_toward(velocity.x, 0, move_speed)
+			velocity.z = move_toward(velocity.z, 0, move_speed)
 	else:
-		velocity.x = move_toward(velocity.x, 0, move_speed)
-		velocity.z = move_toward(velocity.z, 0, move_speed)
+		# Airborne: nudge, don't overwrite — keeps momentum from a moving van.
+		velocity.x += direction.x * air_acceleration * delta
+		velocity.z += direction.z * air_acceleration * delta
 
 	move_and_slide()
+
+	_update_carry_van()
+	_publish_van_state()
+
+
+## Rides the van bed: applies the van's frame-to-frame motion to the standing
+## player. Position takes the full delta, orientation only yaw — the capsule
+## stays upright when the van tilts. Transform-based, so it works identically
+## on the host (live physics) and clients (synced frozen body).
+func _apply_van_carry(delta: float) -> void:
+	if _carry_van == null:
+		return
+	var van_xf := _carry_van.global_transform
+	var delta_xf := van_xf * _last_van_xf.affine_inverse()
+	_van_frame_velocity = (
+		((van_xf.origin - _last_van_xf.origin) / maxf(delta, 0.0001)).limit_length(30.0)
+	)
+	global_position = delta_xf * global_position
+	var delta_yaw := delta_xf.basis.get_euler().y
+	rotation.y += delta_yaw
+	velocity = Basis(Vector3.UP, delta_yaw) * velocity
+	_last_van_xf = van_xf
+
+
+## After moving: are we standing on the van (or anything mounted on it)?
+func _update_carry_van() -> void:
+	var found: Van = null
+	if is_on_floor():
+		for i in get_slide_collision_count():
+			var node: Node = get_slide_collision(i).get_collider()
+			while node != null:
+				if node is Van:
+					found = node
+					break
+				node = node.get_parent()
+			if found != null:
+				break
+	if found == _carry_van:
+		return
+	if found == null:
+		# Jumped or stepped off: keep the van's momentum.
+		velocity += _van_frame_velocity
+		_van_frame_velocity = Vector3.ZERO
+	else:
+		_last_van_xf = found.global_transform
+	_carry_van = found
+
+
+func _publish_van_state() -> void:
+	on_van = _carry_van != null
+	if _carry_van != null:
+		van_local_pos = _carry_van.global_transform.affine_inverse() * global_position
+		van_local_yaw = rotation.y - _carry_van.rotation.y
 
 
 # Solo-test helper: drive all four levers with WASD/Space from any seat.
@@ -182,6 +258,9 @@ func _drive_with_keys(delta: float) -> void:
 func seat_locally(seat: Seat) -> void:
 	current_seat = seat
 	velocity = Vector3.ZERO
+	_carry_van = null
+	_van_frame_velocity = Vector3.ZERO
+	on_van = false
 	global_transform = seat.sit_point.global_transform
 
 
@@ -196,10 +275,16 @@ func unseat_locally(exit_transform: Transform3D) -> void:
 
 func _process(_delta: float) -> void:
 	# Network poll applies incoming sync at the start of the frame, before _process.
-	# Re-gluing here guarantees the locally derived seat pose always wins over the
-	# (laggy) synced transform for seated players — on every peer, every frame.
+	# Re-gluing here guarantees the locally derived pose always wins over the
+	# (laggy) synced world transform — on every peer, every frame.
 	if current_seat != null:
 		global_transform = current_seat.sit_point.global_transform
+	elif on_van and not is_multiplayer_authority():
+		# Remote passenger on the van bed: rebuild the pose from OUR local van.
+		var van: Node3D = get_tree().get_first_node_in_group("van")
+		if van != null:
+			global_position = van.global_transform * van_local_pos
+			rotation.y = van.rotation.y + van_local_yaw
 
 
 ## Text for the HUD prompt under the crosshair.

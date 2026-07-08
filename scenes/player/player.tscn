@@ -23,6 +23,15 @@ properties/1/replication_mode = 1
 properties/2/path = NodePath(".:color_index")
 properties/2/spawn = true
 properties/2/replication_mode = 0
+properties/3/path = NodePath(".:on_van")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+properties/4/path = NodePath(".:van_local_pos")
+properties/4/spawn = true
+properties/4/replication_mode = 1
+properties/5/path = NodePath(".:van_local_yaw")
+properties/5/spawn = true
+properties/5/replication_mode = 1
 
 [node name="Player" type="CharacterBody3D" unique_id=1641595711]
 collision_layer = 2
